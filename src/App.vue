@@ -1,17 +1,36 @@
 <script setup lang="ts">
-import { theme } from '@/theme'
-import { ConfigProvider } from 'ant-design-vue'
-import { MessageCircle, Minimize2, Send, X } from 'lucide-vue-next'
-import { RouterView } from 'vue-router'
-
+import AdminLayout from '@/layouts/admin.vue'
 import DefaultLayout from '@/layouts/default.vue'
+import { ConfigProvider } from 'ant-design-vue'
+import { RouterView, useRoute } from 'vue-router'
+
+const layouts: Record<string, typeof DefaultLayout> = {
+    default: DefaultLayout,
+    admin: AdminLayout
+}
+
+const layout = ref<typeof DefaultLayout | undefined>(DefaultLayout)
+const route = useRoute()
+
+watch(
+    () => route.meta.layout as string | undefined,
+    (layoutName: string | undefined) => {
+        if (layoutName === '404') {
+            layout.value = undefined
+            return
+        }
+        layout.value = markRaw(layouts[layoutName || 'default'] ?? DefaultLayout)
+    },
+    { immediate: true }
+)
+
 </script>
 
 <template>
     <ConfigProvider :theme="{ token: { colorPrimary: '#962D33' } }">
-        <DefaultLayout>
+        <component :is="layout">
             <RouterView />
-        </DefaultLayout>
+        </component>
     </ConfigProvider>
 </template>
 

@@ -2,14 +2,13 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 export enum RoutePrefix {
     Default = '',
-    Auth = '/auth',
     Admin = '/admin'
 }
 
 export enum RoutePath {
     Home = RoutePrefix.Default + '/',
     Projects = RoutePrefix.Default + '/projects',
-    Login = RoutePrefix.Auth + '/login',
+    Login = RoutePrefix.Admin + '/login',
     ProjectManage = RoutePrefix.Admin + '/project-manage',
     ProductManage = RoutePrefix.Admin + '/product-manage',
     ContactManage = RoutePrefix.Admin + '/contact-manage'
@@ -28,7 +27,7 @@ const router = createRouter({
                     name: 'home',
                     component: () => import('../views/Home.vue'),
                     meta: {
-                        layout: 'landing-page'
+                        layout: 'default'
                     }
                 },
                 {
@@ -36,20 +35,20 @@ const router = createRouter({
                     name: 'projects',
                     component: () => import('../views/FindProject.vue'),
                     meta: {
-                        layout: 'landing-page'
+                        layout: 'default'
                     }
                 }
             ]
         },
         {
-            path: RoutePrefix.Auth,
+            path: RoutePrefix.Admin,
             children: [
                 {
                     path: RoutePath.Login,
                     name: 'login',
                     component: () => import('../views/Login.vue'),
                     meta: {
-                        layout: 'landing-page'
+                        layout: 'default'
                     }
                 }
             ]
@@ -62,7 +61,7 @@ const router = createRouter({
                     name: 'product-manage',
                     component: () => import('../views/admin/ProductManage.vue'),
                     meta: {
-                        layout: 'landing-page'
+                        layout: 'admin'
                     }
                 },
                 {
@@ -70,7 +69,7 @@ const router = createRouter({
                     name: 'project-manage',
                     component: () => import('../views/admin/ProjectManage.vue'),
                     meta: {
-                        layout: 'landing-page'
+                        layout: 'admin'
                     }
                 },
                 {
@@ -78,7 +77,7 @@ const router = createRouter({
                     name: 'contact-manage',
                     component: () => import('../views/admin/ContactManage.vue'),
                     meta: {
-                        layout: 'landing-page'
+                        layout: 'admin'
                     }
                 }
             ]
