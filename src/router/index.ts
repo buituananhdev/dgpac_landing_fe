@@ -61,7 +61,8 @@ const router = createRouter({
                     name: 'product-manage',
                     component: () => import('../views/admin/ProductManage.vue'),
                     meta: {
-                        layout: 'admin'
+                        layout: 'admin',
+                        requiresAuth: true
                     }
                 },
                 {
@@ -69,7 +70,8 @@ const router = createRouter({
                     name: 'project-manage',
                     component: () => import('../views/admin/ProjectManage.vue'),
                     meta: {
-                        layout: 'admin'
+                        layout: 'admin',
+                        requiresAuth: true
                     }
                 },
                 {
@@ -77,7 +79,8 @@ const router = createRouter({
                     name: 'contact-manage',
                     component: () => import('../views/admin/ContactManage.vue'),
                     meta: {
-                        layout: 'admin'
+                        layout: 'admin',
+                        requiresAuth: true
                     }
                 }
             ]

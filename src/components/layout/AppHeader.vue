@@ -104,51 +104,168 @@ const showDrawer = ref(false)
 const activeSection = ref('home')
 const sections = ['home', 'services', 'products', 'projects', 'guides', 'contact']
 
-// Smooth scroll to section
-const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId)
-    if (element) {
-        const headerHeight = 80 // Adjust based on your header height
-        const elementPosition = element.getBoundingClientRect().top
-        const offsetPosition = elementPosition + window.pageYOffset - headerHeight
+// Get active section from current URL
+const getActiveSectionFromUrl = () => {
+    const currentPath = window.location.pathname.toLowerCase()
+    
+    // Remove leading slash and file extensions
+    const cleanPath = currentPath.replace(/^\//, '').replace(/\.(html|php)$/, '')
+    
+    // Check if current path matches any section
+    if (sections.includes(cleanPath)) {
+        return cleanPath
+    }
+    
+    // Check for common path variations
+    const pathMappings: { [key: string]: string } = {
+        '': 'home',
+        'index': 'home',
+        'homepage': 'home',
+        'service': 'services',
+        'product': 'products',
+        'project': 'projects',
+        'guide': 'guides',
+        'contact': 'contact',
+        'contacts': 'contact',
+        'about': 'home' // or create separate 'about' section if needed
+    }
+    
+    return pathMappings[cleanPath] || 'home'
+}
 
+// Smooth scroll to section with navigation support
+const scrollToSection = (sectionId: string) => {
+    const currentSection = getActiveSectionFromUrl()
+    
+    // If clicking on the same section we're already on, scroll to top
+    if (currentSection === sectionId) {
         window.scrollTo({
-            top: offsetPosition,
+            top: 0,
             behavior: 'smooth'
         })
-
-        // Update active section immediately for better UX
-        activeSection.value = sectionId
-
-        // Close mobile drawer if open
         showDrawer.value = false
+        return
+    }
+    
+    // For all other cases, navigate to home page and scroll to section
+    const currentPath = window.location.pathname.toLowerCase()
+    const isHomePage = currentPath === '/' || currentPath === '' || currentPath === '/index.html' || currentPath === '/home'
+    
+    if (isHomePage) {
+        // Already on home page, just scroll to section
+        const element = document.getElementById(sectionId)
+        
+        if (element) {
+            const headerHeight = 80
+            const elementPosition = element.getBoundingClientRect().top
+            const offsetPosition = elementPosition + window.pageYOffset - headerHeight
+
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: 'smooth'
+            })
+
+            // Update active section immediately for better UX
+            activeSection.value = sectionId
+        } else {
+            // Element not found, try again after a short delay
+            setTimeout(() => {
+                const elementRetry = document.getElementById(sectionId)
+                if (elementRetry) {
+                    const headerHeight = 80
+                    const elementPosition = elementRetry.getBoundingClientRect().top
+                    const offsetPosition = elementPosition + window.pageYOffset - headerHeight
+
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: 'smooth'
+                    })
+
+                    activeSection.value = sectionId
+                }
+            }, 100)
+        }
+    } else {
+        // Not on home page, navigate to home with section hash
+        window.location.href = `/#${sectionId}`
+    }
+    
+    // Close mobile drawer if open
+    showDrawer.value = false
+}
+
+// Handle scroll to section on page load (for hash navigation)
+const handleHashNavigation = () => {
+    const hash = window.location.hash.substring(1) // Remove the '#'
+    if (hash && sections.includes(hash)) {
+        // Small delay to ensure page is loaded
+        setTimeout(() => {
+            const element = document.getElementById(hash)
+            if (element) {
+                const headerHeight = 80
+                const elementPosition = element.getBoundingClientRect().top
+                const offsetPosition = elementPosition + window.pageYOffset - headerHeight
+
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: 'smooth'
+                })
+
+                activeSection.value = hash
+            }
+        }, 100)
     }
 }
 
 const handleScroll = () => {
     scrolled.value = window.scrollY > 50
 
-    // Find the current active section based on scroll position
-    const scrollPosition = window.scrollY + 150 // Offset for header height
+    // Only update active section based on scroll if we're on a page with sections
+    const currentSection = getActiveSectionFromUrl()
+    const isHomePage = currentSection === 'home'
+    
+    if (isHomePage) {
+        // Find the current active section based on scroll position (for home page)
+        const scrollPosition = window.scrollY + 150 // Offset for header height
 
-    // Check each section from bottom to top
-    for (let i = sections.length - 1; i >= 0; i--) {
-        const section = document.getElementById(sections[i])
-        if (section) {
-            const sectionTop = section.offsetTop
-            const sectionHeight = section.offsetHeight
+        // Check each section from bottom to top
+        for (let i = sections.length - 1; i >= 0; i--) {
+            const section = document.getElementById(sections[i])
+            if (section) {
+                const sectionTop = section.offsetTop
+                const sectionHeight = section.offsetHeight
 
-            // Check if current scroll position is within this section
-            if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
-                activeSection.value = sections[i]
-                break
+                // Check if current scroll position is within this section
+                if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
+                    activeSection.value = sections[i]
+                    break
+                }
             }
         }
-    }
 
-    // Handle edge case for home section when at top
-    if (window.scrollY < 100) {
-        activeSection.value = 'home'
+        // Handle edge case for home section when at top
+        if (window.scrollY < 100) {
+            activeSection.value = 'home'
+        }
+    } else {
+        // For other pages, keep the active section based on URL
+        activeSection.value = currentSection
+    }
+}
+
+// Initialize active section based on current URL
+const initializeActiveSection = () => {
+    const urlSection = getActiveSectionFromUrl()
+    activeSection.value = urlSection
+    
+    // If there's a hash in the URL, handle it
+    const hash = window.location.hash.substring(1)
+    if (hash && sections.includes(hash)) {
+        activeSection.value = hash
+        // Small delay to ensure page is loaded
+        setTimeout(() => {
+            scrollToSection(hash)
+        }, 100)
     }
 }
 
@@ -162,12 +279,27 @@ const throttledHandleScroll = () => {
 }
 
 onMounted(() => {
+    // Initialize active section based on current URL
+    initializeActiveSection()
+    
     window.addEventListener('scroll', throttledHandleScroll, { passive: true })
     handleScroll() // Initial call
+    
+    // Listen for hash changes (browser back/forward)
+    window.addEventListener('hashchange', handleHashNavigation)
+    
+    // Listen for popstate (browser back/forward for full page navigation)
+    window.addEventListener('popstate', () => {
+        setTimeout(() => {
+            initializeActiveSection()
+        }, 100)
+    })
 })
 
 onUnmounted(() => {
     window.removeEventListener('scroll', throttledHandleScroll)
+    window.removeEventListener('hashchange', handleHashNavigation)
+    window.removeEventListener('popstate', initializeActiveSection)
     if (scrollTimeout) {
         clearTimeout(scrollTimeout)
     }
